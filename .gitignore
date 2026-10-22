@@ -1,0 +1,26 @@
+# Environments & Python Virtualenv
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Secrets & Local Configurations (DO NOT COMMIT)
+.env
+.env.local
+*.env
+.streamlit/secrets.toml
+
+# Logs
+*.log
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

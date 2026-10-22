@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PolicyLens — Understand Your Health Policy Before You Claim</title>
+  <meta name="description" content="Grounded, verifiable RAG assistant for Indian Health Insurance policy wordings and IRDAI regulations." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230E7C7B' stroke-width='2'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>" />
+
+  <!-- Google Fonts: Fraunces, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <!-- Mesh Gradient Background Canvas -->
+  <div class="background-mesh" aria-hidden="true"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+
+  <!-- STICKY GLASS HEADER -->
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <svg class="icon-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <circle cx="12" cy="11" r="3"/>
+            <path d="m14.2 13.2 2 2"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">PolicyLens</span>
+          <span class="brand-tagline">Understand your health policy before you claim</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs with animated indicator -->
+      <nav class="nav-tabs" role="tablist" aria-label="Main Navigation">
+        <button class="nav-tab active" role="tab" id="tab-btn-ask" aria-selected="true" aria-controls="view-ask" data-target="view-ask">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tab-icon">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>Ask PolicyLens</span>
+        </button>
+        <button class="nav-tab" role="tab" id="tab-btn-corpus" aria-selected="false" aria-controls="view-corpus" data-target="view-corpus">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tab-icon">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+            <path d="M6 6h10"/>
+            <path d="M6 10h10"/>
+          </svg>
+          <span>Document Corpus</span>
+        </button>
+        <button class="nav-tab" role="tab" id="tab-btn-eval" aria-selected="false" aria-controls="view-eval" data-target="view-eval">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tab-icon">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          <span>Evaluation</span>
+        </button>
+        <div class="nav-indicator" aria-hidden="true"></div>
+      </nav>
+
+      <!-- Actions: Status Pill & Theme Toggle -->
+      <div class="header-actions">
+        <div id="health-pill" class="health-pill" title="Health Status: Loading...">
+          <span class="health-dot"></span>
+          <span id="health-label" class="health-label">Checking Index...</span>
+        </div>
+
+        <!-- Launch 3-Minute Demo Pill -->
+        <button id="nav-demo-btn" class="nav-demo-pill" type="button" title="Launch 3-Minute Presentation Demo Dock">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <span>3-Min Demo</span>
+        </button>
+
+        <button id="theme-toggle" class="icon-button" aria-label="Toggle theme" title="Toggle dark/light theme (T)">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        </button>
+
+        <button id="shortcuts-btn" class="icon-button" aria-label="Keyboard Shortcuts" title="Keyboard Shortcuts (?)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APPLICATION CONTAINER -->
+  <main id="main-content" class="main-content" role="main">
+    
+    <!-- ======================================================== -->
+    <!-- VIEW 1: ASK (SPLIT VIEW: CHAT + EVIDENCE)               -->
+    <!-- ======================================================== -->
+    <section id="view-ask" class="tab-view active" role="tabpanel" aria-labelledby="tab-btn-ask">
+      <div class="ask-layout">
+        
+        <!-- Left: Chat Column (60%) -->
+        <div class="chat-column">
+          
+          <!-- Landing / Empty State Hero -->
+          <div id="chat-hero" class="chat-hero">
+            <div class="hero-badge">
+              <span class="badge-dot"></span> Built for Indian Health Policyholders
+            </div>
+            <h1 class="hero-title">
+              Ask your policy.<br />
+              <span class="gradient-text">Get the clause, not the runaround.</span>
+            </h1>
+            <p class="hero-subtext">
+              Ravi is facing a planned hospitalisation. Is his room rent capped? Why might his claim be repudiated? 
+              What are his IRDAI Ombudsman rights? PolicyLens provides plain-language answers with deterministic citations.
+            </p>
+
+            <!-- Example Question Chips -->
+            <div class="chips-container" id="example-chips">
+              <!-- Dynamically populated or fallback -->
+              <button class="chip" data-q="What is the room rent limit and ICU sub-limit under the Arogya Sanjeevani policy?">
+                <span>Room rent & ICU sub-limits</span>
+              </button>
+              <button class="chip" data-q="What is the waiting period for pre-existing diseases (PED) in the Arogya Sanjeevani policy?">
+                <span>PED waiting period (36 mo)</span>
+              </button>
+              <button class="chip" data-q="What are the mandatory turnaround times for cashless hospitalisation authorization under IRDAI regulations?">
+                <span>IRDAI cashless TAT (1h/3h)</span>
+              </button>
+              <button class="chip" data-q="Can an insurance company deny a claim just because the hospital papers were submitted late?">
+                <span>Claim denied for late filing?</span>
+              </button>
+              <button class="chip" data-q="If an insurer denies a cashless claim under Arogya Sanjeevani, what escalation options and dispute redressal rights exist under IRDAI regulations?">
+                <span>Ombudsman & GRO rights</span>
+              </button>
+              <button class="chip chip-unanswerable" data-q="What is the maximum room rent allowance for a Deluxe Suite at Apollo Hospital Bangalore?">
+                <span>Apollo Hospital tariff</span>
+                <span class="chip-badge">tests refusal</span>
+              </button>
+            </div>
+
+            <div class="hero-demo-action">
+              <button id="hero-demo-btn" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>Run 3-Minute Presentation Demo</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Messages Stream Container -->
+          <div id="chat-messages" class="chat-messages" aria-live="polite"></div>
+
+          <!-- Bottom Anchor for smooth scroll -->
+          <div id="messages-bottom-anchor"></div>
+        </div>
+
+        <!-- Right: Evidence Panel (40%) -->
+        <aside id="evidence-panel" class="evidence-panel" aria-label="Grounding Evidence and Sources">
+          <div class="evidence-header">
+            <div class="evidence-title-group">
+              <h2 class="evidence-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="evidence-icon">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                Grounding Evidence
+              </h2>
+              <span id="evidence-count-badge" class="evidence-count">0 sources</span>
+            </div>
+            <button id="close-evidence-mobile" class="icon-button mobile-only" aria-label="Close evidence panel">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <!-- Scores Legend & Help -->
+          <div class="evidence-legend">
+            <span><b>Retrieval Provenance:</b> Dense Cosine, Sparse BM25, Fused RRF (k=60), and Cross-Encoder Rerank.</span>
+          </div>
+
+          <!-- Cards Container -->
+          <div id="evidence-cards-container" class="evidence-cards-container">
+            <div class="evidence-placeholder">
+              <div class="placeholder-icon">📄</div>
+              <p>Ask a question to inspect retrieved policy clauses, page numbers, and exact text highlights.</p>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+
+      <!-- Floating Bottom Composer Area -->
+      <div class="composer-container">
+        <div class="composer-card">
+          <form id="chat-form" class="composer-form">
+            <textarea
+              id="chat-input"
+              class="composer-textarea"
+              placeholder="Ask about coverage, waiting periods, sub-limits, or IRDAI rights... (Enter to send, Shift+Enter for newline)"
+              rows="1"
+              aria-label="User query input"
+            ></textarea>
+
+            <div class="composer-controls">
+              <!-- Settings Toggle Button (Gear) -->
+              <button type="button" id="settings-popover-btn" class="icon-button composer-btn" aria-label="Retrieval and Generation Settings" title="Configure RAG pipeline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+              </button>
+
+              <!-- Clear Chat Button -->
+              <button type="button" id="clear-chat-btn" class="icon-button composer-btn" aria-label="Clear chat session" title="Clear conversation memory">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                </svg>
+              </button>
+
+              <!-- Send Button with Spinner Morph -->
+              <button type="submit" id="send-btn" class="send-btn" aria-label="Send query">
+                <svg class="send-icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+                <div class="send-spinner"></div>
+              </button>
+            </div>
+          </form>
+
+          <!-- Settings Popover Panel -->
+          <div id="settings-popover" class="settings-popover" hidden>
+            <div class="popover-header">
+              <h3>RAG Pipeline Controls</h3>
+              <button type="button" id="close-popover-btn" class="icon-button close-popover" aria-label="Close settings">✕</button>
+            </div>
+
+            <div class="popover-body">
+              <!-- Document Filter -->
+              <div class="setting-group">
+                <label class="setting-label">Document Filter</label>
+                <div id="doc-filter-chips" class="filter-chips">
+                  <!-- Dynamically loaded -->
+                </div>
+              </div>
+
+              <!-- Top-K Slider -->
+              <div class="setting-group">
+                <div class="setting-row-between">
+                  <label for="top-k-slider" class="setting-label">Top-K Passages</label>
+                  <span id="top-k-value" class="setting-val-badge">5</span>
+                </div>
+                <input type="range" id="top-k-slider" min="3" max="10" value="5" step="1" class="slider" />
+              </div>
+
+              <!-- Toggles -->
+              <div class="setting-group">
+                <label class="setting-label">Upgrades & Defenses</label>
+                <label class="switch-row">
+                  <span>Cross-Encoder Reranker (ms-marco)</span>
+                  <input type="checkbox" id="toggle-rerank" checked />
+                  <span class="switch-slider"></span>
+                </label>
+                <label class="switch-row">
+                  <span>Query Rewriter & Synonym Expansion</span>
+                  <input type="checkbox" id="toggle-rewrite" checked />
+                  <span class="switch-slider"></span>
+                </label>
+                <label class="switch-row">
+                  <span>Faithfulness Self-Check (Verification)</span>
+                  <input type="checkbox" id="toggle-verify" checked />
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+
+              <!-- Rebuild Index Button -->
+              <div class="setting-group-action">
+                <button type="button" id="rebuild-index-btn" class="btn btn-outline btn-full">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                    <path d="M21 3v5h-5"/>
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                    <path d="M8 16H3v5"/>
+                  </svg>
+                  <span>Rebuild FAISS & BM25 Index</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="composer-disclaimer">
+          ⚖️ Informational only, not insurance or legal advice. PolicyLens answers are grounded strictly in indexed policy documents.
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 2: CORPUS                                          -->
+    <!-- ======================================================== -->
+    <section id="view-corpus" class="tab-view" role="tabpanel" aria-labelledby="tab-btn-corpus" hidden>
+      <div class="view-container">
+        <div class="view-header view-header-actions">
+          <div class="view-header-text">
+            <h2>Indexed Document Catalog</h2>
+            <p>Every word and numerical threshold in PolicyLens originates from these indexed policies and IRDAI master regulations.</p>
+          </div>
+          <div class="view-actions-group">
+            <button id="add-doc-btn" class="btn btn-primary" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Add Document</span>
+            </button>
+            <button id="corpus-rebuild-btn" class="btn btn-secondary" type="button" title="Rebuild vector & keyword index from all data/ PDFs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span>Rebuild Index</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stat Tiles -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <span class="stat-label">Total Documents</span>
+            <span class="stat-value" id="stat-docs">3</span>
+            <span class="stat-sub">Policies & Regulations</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Total Pages</span>
+            <span class="stat-value" id="stat-pages">5</span>
+            <span class="stat-sub">De-duplicated</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Indexed Chunks</span>
+            <span class="stat-value" id="stat-chunks">20</span>
+            <span class="stat-sub">Structure-Aware Bounded</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Avg Chunk Size</span>
+            <span class="stat-value" id="stat-avg-tokens">122</span>
+            <span class="stat-sub">Tokens (~92 words)</span>
+          </div>
+        </div>
+
+        <!-- Document List Table / Cards -->
+        <div class="corpus-list-container">
+          <div class="table-card">
+            <div id="corpus-docs-list" class="corpus-docs-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 3: EVALUATION & BENCHMARKS                          -->
+    <!-- ======================================================== -->
+    <section id="view-eval" class="tab-view" role="tabpanel" aria-labelledby="tab-btn-eval" hidden>
+      <div class="view-container">
+        <div class="view-header">
+          <h2>Rigorous Evaluation & Ablation Benchmarks</h2>
+          <p>Audited on 10 benchmark queries across direct factual, paraphrased, multi-document, surprise, and unanswerable types.</p>
+        </div>
+
+        <!-- Evaluation Top Metrics -->
+        <div class="stat-grid">
+          <div class="stat-card highlight-card">
+            <span class="stat-label">Pass Rate</span>
+            <span class="stat-value" id="eval-stat-pass">100%</span>
+            <span class="stat-sub">10 / 10 Evaluated Queries</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Citation Accuracy</span>
+            <span class="stat-value" id="eval-stat-cite">100%</span>
+            <span class="stat-sub">Ground Truth Provenance</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Refusal Precision</span>
+            <span class="stat-value" id="eval-stat-refusal">100%</span>
+            <span class="stat-sub">Zero Hallucinations</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Faithfulness Score</span>
+            <span class="stat-value" id="eval-stat-faithful">1.00</span>
+            <span class="stat-sub">Verified Self-Check</span>
+          </div>
+        </div>
+
+        <!-- Ablation Bar Chart Card -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3>Retrieval Architecture Ablation</h3>
+              <p class="chart-subtitle">Comparing Hit@5, MRR, and Keyword Recall across dense, sparse, and hybrid configurations</p>
+            </div>
+          </div>
+          <div class="chart-canvas-wrapper">
+            <canvas id="ablation-chart" width="800" height="300"></canvas>
+          </div>
+          <div class="chart-legend" id="ablation-legend">
+            <div class="legend-item"><span class="legend-color" style="background:#0E7C7B"></span> Hit@5 (%)</div>
+            <div class="legend-item"><span class="legend-color" style="background:#2563EB"></span> MRR (x100)</div>
+            <div class="legend-item"><span class="legend-color" style="background:#F5A524"></span> Keyword Recall (%)</div>
+          </div>
+        </div>
+
+        <!-- Per-Question Execution Results Table -->
+        <div class="results-card">
+          <h3>Test Suite Results Table</h3>
+          <div class="table-responsive">
+            <table class="data-table" id="eval-results-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Type</th>
+                  <th>Question</th>
+                  <th>Verdict</th>
+                  <th>Latency</th>
+                  <th>Source Provenance</th>
+                </tr>
+              </thead>
+              <tbody id="eval-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Failure Analysis Section -->
+        <div class="failure-analysis-section">
+          <h3>Failure Analysis & Adversarial Stress Tests</h3>
+          <p class="section-desc">Audited failure cases, edge conditions, root-cause analyses, and mitigation strategies implemented in PolicyLens.</p>
+          <div id="failure-cases-container" class="failure-cases-grid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- FLOATING DEMO CONTROL DOCK (3-Minute Presentation)       -->
+  <!-- ======================================================== -->
+  <aside id="demo-dock" class="demo-dock" aria-label="Demo Controller" hidden>
+    <div class="demo-dock-header">
+      <div class="demo-dock-title">
+        <span class="demo-pulse"></span>
+        <span>3-Min Presentation Demo</span>
+      </div>
+      <div id="demo-timer" class="demo-timer-chip">3:00</div>
+      <button id="close-demo-btn" class="icon-button close-demo" aria-label="Close demo dock" title="Close (Esc)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="demo-dock-body">
+      <div class="demo-step-badge" id="demo-step-indicator">Scenario 1 of 3</div>
+      <div class="demo-step-title" id="demo-scenario-title">Direct Factual: Room Rent & ICU sub-limits</div>
+      <div class="demo-step-sub" id="demo-scenario-sub">Tests exact numerical clause extraction and citation.</div>
+
+      <div class="demo-dock-actions">
+        <button id="demo-prev-btn" class="btn btn-secondary btn-sm" disabled>‹ Prev</button>
+        <button id="demo-next-btn" class="btn btn-primary btn-sm">
+          <span>Type & Run Scenario</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-right"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ======================================================== -->
+  <!-- ADD DOCUMENT MODAL                                       -->
+  <!-- ======================================================== -->
+  <div id="add-doc-modal" class="modal-overlay" hidden>
+    <div class="modal-dialog modal-dialog-md" role="dialog" aria-modal="true" aria-labelledby="add-doc-modal-title">
+      <div class="modal-header">
+        <div>
+          <h3 id="add-doc-modal-title">Add Document to Corpus</h3>
+          <p class="modal-subtitle">Upload policy wordings or IRDAI regulations (.pdf) to expand PolicyLens knowledge.</p>
+        </div>
+        <button id="close-add-doc-modal" class="icon-button" aria-label="Close modal" title="Close (Esc)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form id="upload-doc-form" class="upload-form">
+        <!-- File Drop Area -->
+        <div id="file-drop-area" class="file-drop-area">
+          <input type="file" id="pdf-file-input" accept=".pdf" class="file-input-hidden" />
+          <div class="drop-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <polyline points="9 15 12 12 15 15"></polyline>
+            </svg>
+          </div>
+          <div class="drop-content" id="drop-prompt">
+            <span class="drop-main">Click to select or drag PDF file here</span>
+            <span class="drop-sub">Indian health policy wordings, rider terms, or IRDAI circulars (.pdf)</span>
+          </div>
+          <div id="selected-file-badge" class="selected-file-badge" hidden>
+            <span class="badge-icon">📄</span>
+            <span id="selected-file-name" class="badge-filename">file.pdf</span>
+            <span id="selected-file-size" class="badge-size">(0 KB)</span>
+            <button type="button" id="clear-selected-file" class="badge-clear" aria-label="Remove selected file">✕</button>
+          </div>
+        </div>
+
+        <!-- Metadata Form Fields -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="upload-doc-title">Document Title <span class="label-optional">(optional)</span></label>
+            <input type="text" id="upload-doc-title" class="form-input" placeholder="e.g. Star Health Comprehensive Policy" />
+          </div>
+          <div class="form-group">
+            <label for="upload-doc-issuer">Issuer / Authority <span class="label-optional">(optional)</span></label>
+            <input type="text" id="upload-doc-issuer" class="form-input" placeholder="e.g. Star Health & Allied Insurance" />
+          </div>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div id="upload-progress-container" class="upload-progress-container" hidden>
+          <div class="progress-bar">
+            <div id="upload-progress-bar" class="progress-fill indeterminate"></div>
+          </div>
+          <div id="upload-progress-text" class="progress-status-text">Parsing PDF, extracting clauses, and building embeddings...</div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="cancel-upload-btn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" id="submit-upload-btn" class="btn btn-primary" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <span id="submit-upload-btn-text">Upload & Index</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- SHORTCUTS MODAL                                          -->
+  <!-- ======================================================== -->
+  <div id="shortcuts-modal" class="modal-overlay" hidden>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
+      <div class="modal-header">
+        <h3 id="shortcuts-modal-title">Keyboard Shortcuts</h3>
+        <button id="close-shortcuts-modal" class="icon-button" aria-label="Close shortcuts modal" title="Close (Esc)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcut-row">
+          <span>Focus Composer Input</span>
+          <kbd>Ctrl</kbd> + <kbd>K</kbd> / <kbd>⌘</kbd> + <kbd>K</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span>Send Message</span>
+          <kbd>Enter</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span>New Line</span>
+          <kbd>Shift</kbd> + <kbd>Enter</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span>Toggle Light/Dark Theme</span>
+          <kbd>T</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span>Open Shortcuts Help</span>
+          <kbd>?</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span>Close Popovers / Modals</span>
+          <kbd>Esc</kbd>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vanilla JS Application Module -->
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

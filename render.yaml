@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: policylens
+    runtime: python
+    buildCommand: pip install -r requirements.txt && python -m src.index
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.10
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash
+      - key: GEMINI_API_KEY
+        sync: false

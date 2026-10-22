@@ -1,0 +1,108 @@
+[
+  {
+    "id": "Q01",
+    "question": "What is the room rent limit and ICU sub-limit under the Arogya Sanjeevani policy?",
+    "type": "direct_factual",
+    "gold_doc": "arogya_sanjeevani_policy_wordings_2024.pdf",
+    "gold_pages_or_keywords": ["room rent", "2%", "5,000", "icu", "10,000"],
+    "expected_answer_points": [
+      "Room rent and boarding covered up to 2% of Sum Insured, maximum Rs. 5,000 per day",
+      "ICU/ICCU charges covered up to 5% of Sum Insured, maximum Rs. 10,000 per day"
+    ]
+  },
+  {
+    "id": "Q02",
+    "question": "What are the mandatory turnaround times for cashless hospitalisation authorization under IRDAI regulations?",
+    "type": "direct_factual",
+    "gold_doc": "irdai_master_circular_claims_grievances_2024.pdf",
+    "gold_pages_or_keywords": ["turnaround", "1 hour", "3 hours", "pre-authorisation", "discharge"],
+    "expected_answer_points": [
+      "Initial cashless pre-authorisation decision within 1 hour (60 minutes)",
+      "Final discharge cashless authorization within 3 hours (180 minutes)"
+    ]
+  },
+  {
+    "id": "Q03",
+    "question": "What is the waiting period for pre-existing diseases (PED) in the Arogya Sanjeevani policy?",
+    "type": "direct_factual",
+    "gold_doc": "arogya_sanjeevani_policy_wordings_2024.pdf",
+    "gold_pages_or_keywords": ["pre-existing disease", "ped", "36 months", "3 years"],
+    "expected_answer_points": [
+      "Mandatory waiting period of 36 months (3 years) of continuous coverage for pre-existing diseases"
+    ]
+  },
+  {
+    "id": "Q04",
+    "question": "What is the mandatory survival period required before critical illness rider benefits are payable under Care Plus?",
+    "type": "direct_factual",
+    "gold_doc": "care_plus_critical_illness_rider_2023.pdf",
+    "gold_pages_or_keywords": ["survival period", "30", "consecutive", "diagnosis"],
+    "expected_answer_points": [
+      "Insured person must survive for a minimum period of 30 consecutive calendar days from first clinical diagnosis"
+    ]
+  },
+  {
+    "id": "Q05",
+    "question": "If Ravi already had hypertension or diabetes before buying this policy, after how long will his hospitalisation for it be covered?",
+    "type": "paraphrased",
+    "gold_doc": "arogya_sanjeevani_policy_wordings_2024.pdf",
+    "gold_pages_or_keywords": ["pre-existing disease", "ped", "36 months", "waiting period"],
+    "expected_answer_points": [
+      "Pre-existing ailments require completion of a 36-month (3-year) continuous waiting period before claims become payable"
+    ]
+  },
+  {
+    "id": "Q06",
+    "question": "Can an insurance company deny a claim just because the hospital papers were submitted late?",
+    "type": "paraphrased",
+    "gold_doc": "irdai_master_circular_claims_grievances_2024.pdf",
+    "gold_pages_or_keywords": ["repudiate", "delay", "intimation", "genuine", "hardship"],
+    "expected_answer_points": [
+      "IRDAI prohibits rejecting claims solely due to delayed intimation or document submission if genuine emergency or hardship is established"
+    ]
+  },
+  {
+    "id": "Q07",
+    "question": "If an insurer denies a cashless claim under Arogya Sanjeevani, what escalation options and dispute redressal rights exist under IRDAI regulations?",
+    "type": "multi_document",
+    "gold_doc": "irdai_master_circular_claims_grievances_2024.pdf",
+    "gold_pages_or_keywords": ["grievance", "gro", "14 days", "ombudsman", "1 year", "50 lakhs"],
+    "expected_answer_points": [
+      "Internal Grievance Redressal Officer (GRO) with 14-day resolution timeline",
+      "IRDAI Bima Bharosa online portal escalation",
+      "Insurance Ombudsman (Bima Lokpal) within 1 year for claims up to Rs 50 Lakhs"
+    ]
+  },
+  {
+    "id": "Q08",
+    "question": "Can Ravi claim reimbursement if his father undergoes cataract surgery 14 months after purchasing the Arogya Sanjeevani policy?",
+    "type": "surprise_style",
+    "gold_doc": "arogya_sanjeevani_policy_wordings_2024.pdf",
+    "gold_pages_or_keywords": ["cataract", "24 months", "waiting period"],
+    "expected_answer_points": [
+      "No, cataract surgery has a mandatory specific waiting period of 24 months, so it is not covered at 14 months"
+    ]
+  },
+  {
+    "id": "Q09",
+    "question": "What is the maximum room rent allowance for a Deluxe Suite at Apollo Hospital Bangalore?",
+    "type": "unanswerable",
+    "gold_doc": "NONE",
+    "gold_pages_or_keywords": [],
+    "expected_answer_points": [
+      "I don't know based on the provided documents.",
+      "Apollo Hospital specific room tariffs or Deluxe Suite allowances are not found in the documents."
+    ]
+  },
+  {
+    "id": "Q10",
+    "question": "Does the policy cover elective cosmetic hair transplant surgery performed by Dr. Sharma at Fortis Hospital?",
+    "type": "unanswerable",
+    "gold_doc": "NONE",
+    "gold_pages_or_keywords": [],
+    "expected_answer_points": [
+      "I don't know based on the provided documents.",
+      "Elective cosmetic surgery and hair transplant are excluded, and doctor-specific fees are not detailed."
+    ]
+  }
+]
