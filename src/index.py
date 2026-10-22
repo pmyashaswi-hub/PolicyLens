@@ -39,9 +39,13 @@ def get_embedding_model():
     """Lazy loader for SentenceTransformer embedding model."""
     global _EMBEDDING_MODEL
     if _EMBEDDING_MODEL is None:
-        from sentence_transformers import SentenceTransformer
-        logger.info("Loading embedding model: %s", EMBEDDING_MODEL_NAME)
-        _EMBEDDING_MODEL = SentenceTransformer(EMBEDDING_MODEL_NAME)
+        try:
+            from sentence_transformers import SentenceTransformer
+            logger.info("Loading embedding model: %s", EMBEDDING_MODEL_NAME)
+            _EMBEDDING_MODEL = SentenceTransformer(EMBEDDING_MODEL_NAME)
+        except Exception as e:
+            logger.warning("Could not load SentenceTransformer embedding model: %s", e)
+            _EMBEDDING_MODEL = None
     return _EMBEDDING_MODEL
 
 
@@ -74,23 +78,32 @@ def build_indices(chunks: List[DocumentChunk], force_rebuild: bool = False) -> T
     print(f"  ✓ BM25 index persisted to {BM25_INDEX_PATH}")
 
     # 2. Dense Index (FAISS)
-    print("  • Computing dense embeddings via BAAI/bge-small-en-v1.5...")
-    embedder = get_embedding_model()
-    texts = [c.text for c in chunks]
-    embeddings = embedder.encode(
-        texts,
-        batch_size=32,
-        show_progress_bar=True,
-        normalize_embeddings=True,
-    )
-    embeddings = np.ascontiguousarray(embeddings, dtype=np.float32)
+    index = None
+    try:
+        import faiss
+        print("  • Computing dense embeddings via BAAI/bge-small-en-v1.5...")
+        embedder = get_embedding_model()
+        if embedder:
+            texts = [c.text for c in chunks]
+            embeddings = embedder.encode(
+                texts,
+                batch_size=32,
+                show_progress_bar=True,
+                normalize_embeddings=True,
+            )
+            embeddings = np.ascontiguousarray(embeddings, dtype=np.float32)
 
-    dimension = embeddings.shape[1]
-    index = faiss.IndexFlatIP(dimension)
-    index.add(embeddings)
+            dimension = embeddings.shape[1]
+            index = faiss.IndexFlatIP(dimension)
+            index.add(embeddings)
 
-    faiss.write_index(index, str(FAISS_INDEX_PATH))
-    print(f"  ✓ FAISS index ({index.ntotal} vectors, {dimension}-dim) persisted to {FAISS_INDEX_PATH}")
+            faiss.write_index(index, str(FAISS_INDEX_PATH))
+            print(f"  ✓ FAISS index ({index.ntotal} vectors, {dimension}-dim) persisted to {FAISS_INDEX_PATH}")
+        else:
+            print("  ⚠ Embedding model unavailable, dense index build skipped.")
+    except Exception as e:
+        print(f"  ⚠ Dense index creation skipped: {e}")
+        index = None
 
     # 3. Chunks Metadata
     metadata_list = [c.to_dict() for c in chunks]
@@ -105,8 +118,7 @@ def build_indices(chunks: List[DocumentChunk], force_rebuild: bool = False) -> T
 def indices_exist() -> bool:
     """Check if pre-built indices exist on disk."""
     return (
-        FAISS_INDEX_PATH.exists()
-        and BM25_INDEX_PATH.exists()
+        BM25_INDEX_PATH.exists()
         and CHUNKS_METADATA_PATH.exists()
     )
 
@@ -121,17 +133,33 @@ def load_indices() -> Tuple[Any, Any, List[Dict[str, Any]]]:
         chunks = ingest_all_documents()
         return build_indices(chunks)
 
-    import faiss
-    logger.info("Loading FAISS index from %s", FAISS_INDEX_PATH)
-    index = faiss.read_index(str(FAISS_INDEX_PATH))
+    index = None
+    if FAISS_INDEX_PATH.exists():
+        try:
+            import faiss
+            logger.info("Loading FAISS index from %s", FAISS_INDEX_PATH)
+            index = faiss.read_index(str(FAISS_INDEX_PATH))
+        except Exception as e:
+            logger.warning("FAISS index could not be loaded (falling back to BM25): %s", e)
+            index = None
 
-    logger.info("Loading BM25 index from %s", BM25_INDEX_PATH)
-    with open(BM25_INDEX_PATH, "rb") as f:
-        bm25 = pickle.load(f)
+    bm25 = None
+    if BM25_INDEX_PATH.exists():
+        try:
+            logger.info("Loading BM25 index from %s", BM25_INDEX_PATH)
+            with open(BM25_INDEX_PATH, "rb") as f:
+                bm25 = pickle.load(f)
+        except Exception as e:
+            logger.error("BM25 index loading failed: %s", e)
 
-    logger.info("Loading metadata from %s", CHUNKS_METADATA_PATH)
-    with open(CHUNKS_METADATA_PATH, "r", encoding="utf-8") as f:
-        metadata = json.load(f)
+    metadata = []
+    if CHUNKS_METADATA_PATH.exists():
+        try:
+            logger.info("Loading metadata from %s", CHUNKS_METADATA_PATH)
+            with open(CHUNKS_METADATA_PATH, "r", encoding="utf-8") as f:
+                metadata = json.load(f)
+        except Exception as e:
+            logger.error("Chunks metadata loading failed: %s", e)
 
     return index, bm25, metadata
 

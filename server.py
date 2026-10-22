@@ -119,12 +119,14 @@ async def health_check():
     """Health check endpoint exposing index readiness and model metadata."""
     try:
         faiss_idx, bm25_idx, metadata = load_indices()
-        index_ready = bool(faiss_idx and bm25_idx and metadata)
+        index_ready = bool(bm25_idx and metadata)
         chunk_count = len(metadata) if metadata else 0
         doc_count = len({c.get("doc_name") for c in metadata}) if metadata else 0
+        dense_ready = bool(faiss_idx is not None)
     except Exception as e:
         logger.warning("Health check detected index issue: %s", e)
         index_ready = False
+        dense_ready = False
         chunk_count = 0
         doc_count = 0
 
@@ -132,6 +134,7 @@ async def health_check():
     return {
         "status": "ok" if index_ready else "degraded",
         "index_ready": index_ready,
+        "dense_ready": dense_ready,
         "doc_count": doc_count,
         "chunk_count": chunk_count,
         "embedding_model": "BAAI/bge-small-en-v1.5",

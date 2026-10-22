@@ -47,27 +47,35 @@ def dense_search(
     Execute dense vector search against FAISS index.
     Returns list of dicts with chunk index and cosine similarity score.
     """
-    embedder = get_embedding_model()
-    # Apply BGE instruction prefix to queries
-    prefixed_query = BGE_QUERY_PREFIX + query
-    query_emb = embedder.encode([prefixed_query], normalize_embeddings=True)
-    query_emb = np.ascontiguousarray(query_emb, dtype=np.float32)
-
-    total_vectors = faiss_index.ntotal
-    search_k = min(top_k, total_vectors)
-    if search_k <= 0:
+    if faiss_index is None:
         return []
+    try:
+        embedder = get_embedding_model()
+        if embedder is None:
+            return []
+        # Apply BGE instruction prefix to queries
+        prefixed_query = BGE_QUERY_PREFIX + query
+        query_emb = embedder.encode([prefixed_query], normalize_embeddings=True)
+        query_emb = np.ascontiguousarray(query_emb, dtype=np.float32)
 
-    scores, indices = faiss_index.search(query_emb, search_k)
-    results = []
-    for rank, (score, idx) in enumerate(zip(scores[0], indices[0]), start=1):
-        if idx >= 0:
-            results.append({
-                "chunk_idx": int(idx),
-                "dense_score": float(score),
-                "dense_rank": rank,
-            })
-    return results
+        total_vectors = getattr(faiss_index, "ntotal", 0)
+        search_k = min(top_k, total_vectors)
+        if search_k <= 0:
+            return []
+
+        scores, indices = faiss_index.search(query_emb, search_k)
+        results = []
+        for rank, (score, idx) in enumerate(zip(scores[0], indices[0]), start=1):
+            if idx >= 0:
+                results.append({
+                    "chunk_idx": int(idx),
+                    "dense_score": float(score),
+                    "dense_rank": rank,
+                })
+        return results
+    except Exception as e:
+        logger.warning("Dense search execution failed: %s", e)
+        return []
 
 
 def bm25_search(
